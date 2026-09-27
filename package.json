@@ -1,0 +1,14 @@
+{
+  "name": "revvo",
+  "private": true,
+  "description": "REVVO — skróty do aplikacji w web/ (uruchamiaj z katalogu głównego)",
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "lint": "npm --prefix web run lint",
+    "db:migrate": "npm --prefix web run db:migrate",
+    "db:seed": "npm --prefix web run db:seed",
+    "db:studio": "npm --prefix web run db:studio"
+  }
+}
