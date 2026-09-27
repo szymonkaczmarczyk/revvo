@@ -1,0 +1,307 @@
+@import "tailwindcss";
+
+/* REVVO — paleta v2 (źródło: ../design-system/revvo/MASTER.md §1) */
+:root {
+  --rv-bg: #14161b;
+  --rv-surface: #1a1d24;
+  --rv-surface-2: #232730;
+  --rv-surface-3: #2c313c;
+  --rv-border: rgba(255, 255, 255, 0.08);
+  --rv-border-strong: rgba(255, 255, 255, 0.14);
+
+  --rv-copper: #c87a4b;
+  --rv-copper-hover: #d98f62;
+  --rv-copper-press: #ae5b2e;
+  --rv-on-copper: #14161b;
+  --rv-cobalt: #1b6ca8;
+  --rv-cobalt-text: #5b9bd5;
+  --rv-cobalt-text-hover: #7fb2e0;
+
+  --rv-text: #e5e7eb;
+  --rv-text-muted: #9ca3af;
+  --rv-text-disabled: #6b7280;
+
+  --rv-success: #4ade80;
+  --rv-warning: #fbbf24;
+  --rv-danger: #f87171;
+  --rv-status-daily: #5b9bd5;
+  --rv-status-build: #e0a458;
+  --rv-status-weekend: #4ade80;
+  --rv-status-track: #f87171;
+
+  --header-h: 72px;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--rv-bg);
+  --color-surface: var(--rv-surface);
+  --color-surface-2: var(--rv-surface-2);
+  --color-surface-3: var(--rv-surface-3);
+  --color-line: var(--rv-border);
+  --color-line-strong: var(--rv-border-strong);
+  --color-copper: var(--rv-copper);
+  --color-copper-hover: var(--rv-copper-hover);
+  --color-copper-press: var(--rv-copper-press);
+  --color-on-copper: var(--rv-on-copper);
+  --color-cobalt: var(--rv-cobalt);
+  --color-cobalt-text: var(--rv-cobalt-text);
+  --color-cobalt-text-hover: var(--rv-cobalt-text-hover);
+  --color-ink: var(--rv-text);
+  --color-ink-muted: var(--rv-text-muted);
+  --color-ink-disabled: var(--rv-text-disabled);
+  --color-success: var(--rv-success);
+  --color-warning: var(--rv-warning);
+  --color-danger: var(--rv-danger);
+  --color-status-daily: var(--rv-status-daily);
+  --color-status-build: var(--rv-status-build);
+  --color-status-weekend: var(--rv-status-weekend);
+  --color-status-track: var(--rv-status-track);
+
+  --font-display: var(--font-syncopate), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+html {
+  scroll-padding-top: calc(var(--header-h) + 16px);
+}
+
+body {
+  background: var(--rv-bg);
+  color: var(--rv-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(200, 122, 75, 0.35);
+}
+
+/* Widoczny focus dla klawiatury (MASTER §4) */
+:focus-visible {
+  outline: 2px solid var(--rv-cobalt-text);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Skeleton ładowania garażu — miedziany shimmer */
+@keyframes rv-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.rv-skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--rv-surface-2) 30%,
+    rgba(200, 122, 75, 0.14) 50%,
+    var(--rv-surface-2) 70%
+  );
+  background-size: 200% 100%;
+  animation: rv-shimmer 1.4s linear infinite;
+}
+
+/* Wejście sekcji */
+@keyframes rv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rv-rise {
+  animation: rv-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Tło całej strony — powoli dryfujące i przenikające się gradienty (miedź ↔ kobalt).
+   Animujemy tylko transform i opacity (kompozytor GPU), bez filtrów. */
+.rv-ambient {
+  position: fixed;
+  inset: -25%;
+  z-index: -10;
+  pointer-events: none;
+}
+.rv-ambient::before,
+.rv-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+.rv-ambient::before {
+  background:
+    radial-gradient(38% 32% at 22% 28%, rgba(200, 122, 75, 0.13), transparent 70%),
+    radial-gradient(34% 30% at 78% 72%, rgba(27, 108, 168, 0.11), transparent 70%);
+  animation:
+    rv-drift-a 46s ease-in-out infinite alternate,
+    rv-breathe 22s ease-in-out infinite alternate;
+}
+.rv-ambient::after {
+  background:
+    radial-gradient(40% 34% at 70% 25%, rgba(91, 155, 213, 0.12), transparent 70%),
+    radial-gradient(36% 30% at 30% 75%, rgba(174, 91, 46, 0.12), transparent 70%);
+  animation:
+    rv-drift-b 58s ease-in-out infinite alternate,
+    rv-breathe 22s ease-in-out -11s infinite alternate-reverse;
+}
+@keyframes rv-drift-a {
+  from {
+    transform: translate3d(-4%, -3%, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(5%, 4%, 0) rotate(8deg);
+  }
+}
+@keyframes rv-drift-b {
+  from {
+    transform: translate3d(4%, 3%, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-5%, -4%, 0) rotate(-10deg);
+  }
+}
+@keyframes rv-breathe {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Hero — litery nagłówka (kaskada, expo.out) */
+@keyframes rv-char-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em) rotateX(-55deg);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+.rv-char {
+  transform-origin: 50% 100%;
+  animation: rv-char-in 750ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(120ms + var(--i) * 28ms);
+}
+
+/* CTA — przejazd światła po najechaniu */
+.rv-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.rv-sheen:hover::after {
+  transform: translateX(120%);
+}
+
+/* Link — podkreślenie rysowane od lewej do prawej */
+.rv-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition:
+    background-size 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 200ms ease;
+}
+.rv-underline:hover,
+.rv-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Płomień — mikroanimacja „zapłonu” */
+@keyframes rv-ignite {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25) rotate(-6deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.rv-ignite {
+  animation: rv-ignite 280ms ease-out;
+}
+
+/* ---- View transitions (React <ViewTransition>) ---- */
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 240ms;
+  --duration-move: 420ms;
+}
+
+/* Miniatura auta → hero garażu */
+::view-transition-group(.morph) {
+  animation-duration: var(--duration-move);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: rv-via-blur;
+}
+@keyframes rv-via-blur {
+  30% {
+    filter: blur(3px);
+  }
+}
+
+/* Skeleton → treść (build-log garażu) */
+.rv-reveal {
+  animation:
+    var(--duration-enter) ease-out both rv-fade,
+    var(--duration-move) cubic-bezier(0.22, 1, 0.36, 1) both rv-slide-y;
+}
+@keyframes rv-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes rv-slide-y {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
