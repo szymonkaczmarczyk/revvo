@@ -2,6 +2,7 @@
   "name": "revvo",
   "private": true,
   "description": "REVVO — skróty do aplikacji w web/ (uruchamiaj z katalogu głównego)",
+  "license": "MIT",
   "scripts": {
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
@@ -9,6 +10,8 @@
     "lint": "npm --prefix web run lint",
     "db:migrate": "npm --prefix web run db:migrate",
     "db:seed": "npm --prefix web run db:seed",
-    "db:studio": "npm --prefix web run db:studio"
+    "db:studio": "npm --prefix web run db:studio",
+    "test:e2e": "npm --prefix web run test:e2e",
+    "db:seed:demo": "npm --prefix web run db:seed:demo"
   }
 }

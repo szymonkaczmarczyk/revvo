@@ -44,48 +44,48 @@ export function ContactForm() {
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="name" className="block text-sm font-semibold text-ink">
+          <label htmlFor="contact-name" className="block text-sm font-semibold text-ink">
             Imię
           </label>
           <input
-            id="name"
+            id="contact-name"
             name="name"
             autoComplete="given-name"
             defaultValue={v?.name}
             aria-invalid={!!e.name}
-            aria-describedby={e.name ? "name-error" : undefined}
+            aria-describedby={e.name ? "contact-name-error" : undefined}
             className={`${field} mt-1.5 min-h-12 ${e.name ? "border-danger" : "border-line-strong focus:border-cobalt"}`}
           />
-          <Error id="name-error" msg={e.name} />
+          <Error id="contact-name-error" msg={e.name} />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-ink">
+          <label htmlFor="contact-email" className="block text-sm font-semibold text-ink">
             E-mail
           </label>
           <input
-            id="email"
+            id="contact-email"
             name="email"
             type="email"
             autoComplete="email"
             defaultValue={v?.email}
             aria-invalid={!!e.email}
-            aria-describedby={e.email ? "email-error" : undefined}
+            aria-describedby={e.email ? "contact-email-error" : undefined}
             className={`${field} mt-1.5 min-h-12 ${e.email ? "border-danger" : "border-line-strong focus:border-cobalt"}`}
           />
-          <Error id="email-error" msg={e.email} />
+          <Error id="contact-email-error" msg={e.email} />
         </div>
       </div>
 
       <div>
-        <label htmlFor="topic" className="block text-sm font-semibold text-ink">
+        <label htmlFor="contact-topic" className="block text-sm font-semibold text-ink">
           Temat
         </label>
         <select
-          id="topic"
+          id="contact-topic"
           name="topic"
           defaultValue={v?.topic ?? ""}
           aria-invalid={!!e.topic}
-          aria-describedby={e.topic ? "topic-error" : undefined}
+          aria-describedby={e.topic ? "contact-topic-error" : undefined}
           className={`${field} mt-1.5 min-h-12 cursor-pointer ${e.topic ? "border-danger" : "border-line-strong focus:border-cobalt"}`}
         >
           <option value="" disabled>
@@ -95,23 +95,23 @@ export function ContactForm() {
             <option key={t}>{t}</option>
           ))}
         </select>
-        <Error id="topic-error" msg={e.topic} />
+        <Error id="contact-topic-error" msg={e.topic} />
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-semibold text-ink">
+        <label htmlFor="contact-message" className="block text-sm font-semibold text-ink">
           Wiadomość
         </label>
         <textarea
-          id="message"
+          id="contact-message"
           name="message"
           rows={6}
           defaultValue={v?.message}
           aria-invalid={!!e.message}
-          aria-describedby={e.message ? "message-error" : undefined}
+          aria-describedby={e.message ? "contact-message-error" : undefined}
           className={`${field} mt-1.5 resize-y py-3 ${e.message ? "border-danger" : "border-line-strong focus:border-cobalt"}`}
         />
-        <Error id="message-error" msg={e.message} />
+        <Error id="contact-message-error" msg={e.message} />
       </div>
 
       {state.status === "error" && state.message && (

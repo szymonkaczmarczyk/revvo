@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ViewTransition } from "react";
+import { Suspense, ViewTransition } from "react";
 import {
   ArrowRight,
   Flame,
@@ -14,10 +14,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ThreadCard } from "@/components/thread-card";
 import { FlameButton } from "@/components/flame-button";
-import { PhotoCreditLine, StatusBadge, VehiclePhoto, morphName } from "@/components/vehicle";
-import { getVehicle, setupExamples, threads, vehicleName, type Vehicle } from "@/lib/mock-data";
+import { StatusBadge, VehiclePhoto, morphName } from "@/components/vehicle";
+import { vehicleName } from "@/lib/vehicles";
+import { type RankedGarage, getGarageRanking, getPopularSetups } from "@/server/garage/ranking";
+import { FlameHydrator } from "@/components/flame-hydrator";
+import { listThreads } from "@/server/forum/queries";
+import { SidebarWriteCta } from "@/components/forum-viewer";
+import { orMissing, plural, withUnit } from "@/lib/format";
 import { ForumCategoryNav } from "@/components/forum-categories";
-import { WriteGate } from "@/components/write-gate";
 
 
 const fmt = new Intl.NumberFormat("pl-PL");
@@ -79,7 +83,7 @@ function Spec({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FeaturedGarage({ vehicle }: { vehicle: Vehicle }) {
+function FeaturedGarage({ vehicle, month }: { vehicle: RankedGarage; month: string }) {
   return (
     <article className="group relative overflow-hidden rounded-lg border border-line bg-surface lg:col-span-2 lg:row-span-2">
       <Link href={`/garaz/${vehicle.slug}`} transitionTypes={["nav-forward"]} className="block">
@@ -91,10 +95,9 @@ function FeaturedGarage({ vehicle }: { vehicle: Vehicle }) {
           />
         </ViewTransition>
         <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-copper px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-copper">
-          <Trophy className="size-3.5" aria-hidden="true" /> Garaż Miesiąca · wrzesień
+          <Trophy className="size-3.5" aria-hidden="true" /> Prowadzi · {month}
         </span>
       </Link>
-      <PhotoCreditLine vehicle={vehicle} className="px-5 pt-2 sm:px-6" />
       <div className="p-5 pt-3 sm:p-6 sm:pt-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -102,26 +105,27 @@ function FeaturedGarage({ vehicle }: { vehicle: Vehicle }) {
               {vehicleName(vehicle)}
             </h3>
             <p className="mt-1 text-sm text-ink-muted">
-              Garaż: <span className="font-semibold text-ink">{vehicle.owner.name}</span> · {vehicle.year}
+              Garaż: <span className="font-semibold text-ink">{vehicle.owner.name}</span>
+              {vehicle.year ? ` · ${vehicle.year}` : ""} · <span className="font-mono">{vehicle.score} pkt</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={vehicle.status} size="md" />
-            <FlameButton count={vehicle.flames} size="sm" />
+            <FlameButton count={vehicle.flames} size="sm" label="Odpal auto" target={{ type: "vehicle", id: vehicle.id! }} />
           </div>
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-line pt-4 sm:grid-cols-4">
-          <Spec label="Silnik" value={vehicle.engine} />
-          <Spec label="Moc" value={`${vehicle.powerHp} KM`} />
-          <Spec label="Lakier" value={vehicle.paintCode} />
-          <Spec label="Przebieg" value={`${fmt.format(vehicle.mileageKm)} km`} />
+          <Spec label="Silnik" value={orMissing(vehicle.engine)} />
+          <Spec label="Moc" value={withUnit(vehicle.powerHp, "KM")} />
+          <Spec label="Lakier" value={orMissing(vehicle.paintCode)} />
+          <Spec label="Przebieg" value={withUnit(vehicle.mileageKm, "km")} />
         </dl>
       </div>
     </article>
   );
 }
 
-function RunnerUp({ vehicle, place }: { vehicle: Vehicle; place: number }) {
+function RunnerUp({ vehicle, place }: { vehicle: RankedGarage; place: number }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-colors duration-200 hover:border-line-strong">
       <div className="relative">
@@ -134,7 +138,6 @@ function RunnerUp({ vehicle, place }: { vehicle: Vehicle; place: number }) {
           #{place}
         </span>
       </div>
-      <PhotoCreditLine vehicle={vehicle} className="px-4 pt-2" />
       <div className="flex flex-1 flex-col justify-between gap-3 p-4 pt-2">
         <div className="min-w-0">
           <h3 className="truncate text-lg font-extrabold tracking-tight text-ink">
@@ -147,7 +150,8 @@ function RunnerUp({ vehicle, place }: { vehicle: Vehicle; place: number }) {
             </Link>
           </h3>
           <p className="text-sm text-ink-muted">
-            Garaż: <span className="font-semibold text-ink">{vehicle.owner.name}</span> · {vehicle.year}
+            Garaż: <span className="font-semibold text-ink">{vehicle.owner.name}</span>
+            {vehicle.year ? ` · ${vehicle.year}` : ""} · <span className="font-mono">{vehicle.score} pkt</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -155,6 +159,7 @@ function RunnerUp({ vehicle, place }: { vehicle: Vehicle; place: number }) {
           <span className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-3 text-sm font-semibold tabular-nums text-copper">
             <Flame className="size-4" aria-hidden="true" />
             {fmt.format(vehicle.flames)}
+            <span className="sr-only">płomieni</span>
           </span>
         </div>
       </div>
@@ -162,14 +167,16 @@ function RunnerUp({ vehicle, place }: { vehicle: Vehicle; place: number }) {
   );
 }
 
-export default function Home() {
-  const featured = getVehicle("honda-nsx-na1-marta")!;
-  const second = getVehicle("honda-integra-type-r-dc2-piotr")!;
-  const third = getVehicle("honda-civic-type-r-fn2-tomek")!;
+export default async function Home() {
+  const [threads, ranking, setups] = await Promise.all([listThreads(undefined, 4), getGarageRanking(3), getPopularSetups()]);
+  const [featured, ...runnersUp] = ranking.garages;
 
   return (
     <>
       <SiteHeader overlay />
+      <Suspense>
+        <FlameHydrator keys={[...ranking.garages.map((g) => `vehicle:${g.id}`), ...threads.map((t) => `post:${t.id}`)]} />
+      </Suspense>
       <main id="tresc" className="flex-1">
         <HeroVideo />
 
@@ -199,20 +206,28 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <SectionHeading id="gom-title" eyebrow="Ranking społeczności" title="Garaż Miesiąca">
-                Najmocniej rozpalone i najdokładniej prowadzone projekty. Liczy się Płomień i kompletność build-logu.
+                Ranking na żywo za {ranking.month}: Miedziane Płomienie z tego miesiąca i kompletność garażu, czyli zdjęcia,
+                wpisy na osi czasu i modyfikacje.
               </SectionHeading>
               <Link
-                href="/#garaz-miesiaca"
+                href="/garaz-miesiaca"
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cobalt-text transition-colors hover:text-cobalt-text-hover"
               >
                 Pełny ranking <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
-            <div className="mt-12 grid gap-4 lg:grid-cols-3">
-              <FeaturedGarage vehicle={featured} />
-              <RunnerUp vehicle={second} place={2} />
-              <RunnerUp vehicle={third} place={3} />
-            </div>
+            {featured ? (
+              <div className="mt-12 grid gap-4 lg:grid-cols-3">
+                <FeaturedGarage vehicle={featured} month={ranking.month} />
+                {runnersUp.map((vehicle) => (
+                  <RunnerUp key={vehicle.slug} vehicle={vehicle} place={vehicle.rank} />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-12 rounded-lg border border-dashed border-line-strong p-8 text-ink-muted">
+                Ranking ruszy, gdy pierwsze auta trafią do garaży.
+              </p>
+            )}
           </div>
         </section>
 
@@ -252,21 +267,25 @@ export default function Home() {
                   Szukaj
                 </button>
               </form>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Popularne setupy</p>
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {setupExamples.map((s) => (
-                  <li key={s.label}>
-                    <Link
-                      href="/forum/setupy"
-                      className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line-strong bg-surface-2 px-3.5 text-sm font-medium text-ink transition-colors duration-200 hover:border-cobalt hover:text-cobalt-text-hover"
-                    >
-                      <Wrench className="size-3.5 text-cobalt-text" aria-hidden="true" />
-                      {s.label}
-                      <span className="font-mono text-xs text-ink-muted">{s.count} aut</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {setups.length > 0 && (
+                <>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Części z garaży</p>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {setups.map((s) => (
+                      <li key={s.part}>
+                        <Link
+                          href="/forum/setupy"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line-strong bg-surface-2 px-3.5 text-sm font-medium text-ink transition-colors duration-200 hover:border-cobalt hover:text-cobalt-text-hover"
+                        >
+                          <Wrench className="size-3.5 text-cobalt-text" aria-hidden="true" />
+                          {s.part}
+                          <span className="font-mono text-xs text-ink-muted">{plural(s.vehicles, "auto", "auta", "aut")}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -283,8 +302,7 @@ export default function Home() {
             <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_320px]">
               <div className="flex flex-col gap-4">
                 {threads.map((t) => (
-                  // Auto z karty Garażu Miesiąca ma już morph — nazwy przejść muszą być unikalne
-                  <ThreadCard key={t.id} thread={t} morph={t.vehicleSlug !== featured.slug} />
+                  <ThreadCard key={t.slug} thread={t} morph={!ranking.garages.some((g) => g.slug === t.vehicle?.slug)} />
                 ))}
               </div>
 
@@ -292,7 +310,9 @@ export default function Home() {
               <aside aria-label="Działy i zasady">
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[calc(var(--header-h)+24px)]">
                   <ForumCategoryNav limit={8} />
-                  <WriteGate />
+                  <Suspense>
+                    <SidebarWriteCta />
+                  </Suspense>
                 </div>
               </aside>
             </div>

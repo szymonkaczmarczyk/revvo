@@ -1,11 +1,13 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import type { Thread } from "@/lib/mock-data";
+import type { ThreadSummary } from "@/lib/forum";
 import { ForumCategoryNav } from "./forum-categories";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { ThreadCard } from "./thread-card";
-import { WriteGate } from "./write-gate";
+import { Suspense } from "react";
+import { SidebarWriteCta } from "./forum-viewer";
+import { FlameHydrator } from "./flame-hydrator";
 
 export function ForumLayout({
   eyebrow,
@@ -17,12 +19,15 @@ export function ForumLayout({
   eyebrow: string;
   title: string;
   description: string;
-  threads: Thread[];
+  threads: ThreadSummary[];
   active?: string;
 }) {
   return (
     <>
       <SiteHeader />
+      <Suspense>
+        <FlameHydrator keys={threads.map((t) => `post:${t.id}`)} />
+      </Suspense>
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 pb-24 pt-[calc(var(--header-h)+40px)] sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-end justify-between gap-6">
@@ -34,7 +39,7 @@ export function ForumLayout({
               <p className="mt-4 text-ink-muted [text-wrap:pretty]">{description}</p>
             </div>
             <Link
-              href="/rejestracja"
+              href={active ? `/forum/nowy?dzial=${active}` : "/forum/nowy"}
               className="inline-flex h-12 items-center gap-2 rounded-lg bg-copper px-5 font-bold text-on-copper transition-colors duration-200 hover:bg-copper-hover"
             >
               <Plus className="size-5" aria-hidden="true" /> Utwórz wątek
@@ -44,18 +49,26 @@ export function ForumLayout({
           <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
             <div className="flex flex-col gap-4">
               {threads.length ? (
-                threads.map((t) => <ThreadCard key={t.id} thread={t} />)
+                threads.map((t) => <ThreadCard key={t.slug} thread={t} />)
               ) : (
                 <div className="rounded-lg border border-dashed border-line-strong p-10 text-center">
                   <p className="font-bold text-ink">W tym dziale nie ma jeszcze wątków</p>
-                  <p className="mt-2 text-sm text-ink-muted">Załóż pierwszy — z autem z garażu obok nicku.</p>
+                  <p className="mt-2 text-sm text-ink-muted">Załóż pierwszy, z autem z garażu obok imienia.</p>
+                  <Link
+                    href={active ? `/forum/nowy?dzial=${active}` : "/forum/nowy"}
+                    className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md bg-copper px-5 font-bold text-on-copper transition-colors duration-200 hover:bg-copper-hover"
+                  >
+                    <Plus className="size-5" aria-hidden="true" /> Utwórz wątek
+                  </Link>
                 </div>
               )}
             </div>
             <aside aria-label="Działy i zasady">
               <div className="flex flex-col gap-4 lg:sticky lg:top-[calc(var(--header-h)+24px)]">
                 <ForumCategoryNav active={active} />
-                <WriteGate />
+                <Suspense>
+                  <SidebarWriteCta category={active} />
+                </Suspense>
               </div>
             </aside>
           </div>

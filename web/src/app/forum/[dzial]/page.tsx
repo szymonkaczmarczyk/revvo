@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ForumLayout } from "@/components/forum-layout";
-import { CATEGORY_SLUG, threads } from "@/lib/mock-data";
+import { listThreads } from "@/server/forum/queries";
 import { FORUM_CATEGORIES } from "@/server/forum/categories";
 
 export function generateStaticParams() {
@@ -25,7 +25,7 @@ export default async function CategoryPage({ params }: PageProps<"/forum/[dzial]
       eyebrow="Dział forum"
       title={category.name}
       description={category.description}
-      threads={threads.filter((t) => CATEGORY_SLUG[t.category] === dzial)}
+      threads={await listThreads(dzial)}
       active={dzial}
     />
   );

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { ForumLayout } from "@/components/forum-layout";
-import { threads } from "@/lib/mock-data";
+import { listThreads } from "@/server/forum/queries";
 
 export const metadata: Metadata = {
   title: "Forum",
   description: "Usterki, poradniki, setupy i build-logi — przy każdym wpisie auto autora z jego garażu.",
 };
 
-export default function ForumPage() {
+export default async function ForumPage() {
+  const threads = await listThreads();
   return (
     <ForumLayout
       eyebrow="Forum"

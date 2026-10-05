@@ -90,9 +90,8 @@ Nie podejmujemy wobec Ciebie decyzji opartych wyłącznie na zautomatyzowanym pr
 
 | Nazwa / typ | Cel | Czas |
 |-------------|-----|------|
-| [[revvo_session]] | utrzymanie zalogowania | [[30 dni]] lub do wylogowania |
-| [[revvo_csrf]] | ochrona formularzy przed atakami CSRF | sesja |
-| Cloudflare Turnstile (`cf_clearance` i podobne) | odróżnianie ludzi od botów przy rejestracji i logowaniu | [[do 1 roku]] |
+| `__Host-revvo_session` | utrzymanie zalogowania (losowy identyfikator sesji, bez danych osobowych) | 30 dni od ostatniej wizyty lub do wylogowania |
+| Cloudflare Turnstile (`cf_clearance` i podobne) | odróżnianie ludzi od botów przy rejestracji i resecie hasła | [[do 1 roku]] |
 | pamięć lokalna przeglądarki | zapamiętanie preferencji interfejsu | do wyczyszczenia przez Ciebie |
 
 3. Jeśli wprowadzimy cookies analityczne lub marketingowe, zapytamy wcześniej o zgodę w banerze i zaktualizujemy tę politykę.

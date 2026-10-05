@@ -78,3 +78,13 @@ Thumbs.db
 .claude*
 CLAUDE.md
 AGENTS.md
+
+# --- Skrypty zdjęć katalogu (cache API, podglądy) ------------------------------
+scripts/wikidata/.cache/
+scripts/wikidata/.podglad/
+scripts/wikidata/run.log
+
+# --- Skrzynka testowa e-maili (EMAIL_TRANSPORT=file) ---
+.mailbox/
+/.next-e2e/
+/.storage/

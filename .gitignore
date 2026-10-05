@@ -109,3 +109,7 @@ AGENTS.md
 *.sqlite3
 *.db
 *.local.sql
+
+# --- Lokalne materiały źródłowe (nie publikujemy) ---
+content/seed/
+design-system/revvo/MASTER.md

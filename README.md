@@ -228,7 +228,36 @@ Aplikacja będzie dostępna pod adresem: **[http://localhost:3000](http://localh
 | `npm run db:generate` | Generuje nową migrację SQL po modyfikacjach w `schema.ts` |
 | `npm run db:migrate` | Aplikuje oczekujące migracje do bazy PostgreSQL |
 | `npm run db:seed` | Wypełnia bazę danych katalogiem modeli oraz działami forum |
+| `npm run db:seed:demo` | Dodaje 4 konta demo z autami i osią czasu (Marta, Piotr, Tomek, Kasia), można powtarzać |
 | `npm run db:studio` | Otwiera graficzny interfejs Drizzle Studio do przeglądania danych |
+| `npm run test:e2e` | Uruchamia testy end-to-end (Playwright, desktop i mobile) |
+
+---
+
+## 🧪 Testy e2e
+
+Zestaw Playwright w `web/e2e/` (pliki `*.e2e.ts`), uruchamiany w dwóch widokach: desktop 1440×900 i telefon (Pixel 7). Sprawdza:
+
+- każdą podstronę: status 200, jeden H1, `lang="pl"`, meta title i description, brak poziomego scrolla, brak błędów w konsoli,
+- konta: rejestrację (walidacja, duplikat e-maila, link potwierdzający), logowanie z powrotem pod adres `next`, ciasteczko HttpOnly, wylogowanie, blokadę po 5 błędnych hasłach, reset hasła (link działa raz), zmianę imienia i hasła, usunięcie konta,
+- garaż: zdjęcia (wgrywanie, okładka, galeria, odrzucanie podrobionych i za małych plików), kreator auta z katalogu, auto wpisane ręcznie, walidację, edycję, auto główne, usuwanie, ochronę przed edycją cudzego auta,
+- forum, katalog, formularz kontaktu i SEO (unikalne tytuły, Open Graph, `robots.txt`, `sitemap.xml`, `favicon.ico`, strona 404).
+
+Testy działają na osobnym serwerze (port 3100) z testowymi kluczami Cloudflare Turnstile i e-mailami zapisywanymi do `web/.mailbox/` zamiast wysyłki przez Resend. Najprościej uruchomić go z build produkcyjnym w katalogu `.next-e2e`:
+
+```bash
+cd web
+export NEXT_DIST_DIR=.next-e2e STORAGE_DRIVER=local EMAIL_TRANSPORT=file NEXT_PUBLIC_APP_URL=http://localhost:3100 NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+npm run build && npm run start -- --port 3100
+```
+
+W drugim terminalu:
+
+```bash
+npm run test:e2e
+```
+
+Bez działającego serwera Playwright sam uruchomi `next dev` na porcie 3100 z tymi samymi zmiennymi (wolniej). Konta testowe (`e2e-…@example.com`) są usuwane po zakończeniu testów. Wymagana baza z katalogiem i danymi demo (`npm run db:seed` i `npm run db:seed:demo`). Przy pierwszym uruchomieniu: `npx --prefix web playwright install chromium`.
 
 ---
 
@@ -236,8 +265,16 @@ Aplikacja będzie dostępna pod adresem: **[http://localhost:3000](http://localh
 
 - Wszelkie prywatne dane konfiguracyjne, tokeny sesji i klucze API przechowywane są w `.env` i są **wykluczone z repozytorium** poprzez reguły `.gitignore`.
 - Repozytorium zawiera wyłącznie bezpieczny szablon konfiguracyjny `web/.env.example`.
-- Hasła użytkowników są bezpiecznie hashowane przy użyciu algorytmu **Argon2id**.
-- Wszystkie pliki testowe, raporty pokrycia (`coverage/`) oraz lokalne logi asystentów są odfiltrowane przez `.gitignore`.
+- Hasła użytkowników są hashowane algorytmem **Argon2id**. Sesje są zapisane w bazie (w ciasteczku `HttpOnly`, `Secure`, `SameSite=Lax` trafia tylko losowy token, w bazie jego skrót SHA-256), ważne 30 dni od ostatniej wizyty.
+- Rejestracja i reset hasła są chronione przez Cloudflare Turnstile, pułapkę na boty i limity prób. Logowanie blokuje się po 5 błędnych hasłach w 15 minut.
+- Każda zmiana auta sprawdza na serwerze, czy auto należy do zalogowanej osoby. Nagłówki bezpieczeństwa (CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `frame-ancestors`) ustawia `next.config.ts`.
+- Raporty testów (`playwright-report/`, `test-results/`, `coverage/`) oraz lokalne logi asystentów są odfiltrowane przez `.gitignore`. Zestaw testów e2e (`web/e2e/*.e2e.ts`) zostaje w repozytorium.
+
+---
+
+## 📄 Licencja
+
+Projekt jest udostępniony na licencji MIT. Pełna treść w pliku [LICENSE](LICENSE).
 
 ---
 
@@ -245,6 +282,6 @@ Aplikacja będzie dostępna pod adresem: **[http://localhost:3000](http://localh
 
 Stworzone z pasją do motoryzacji i nowoczesnego web developmentu.
 
-**REVVO © 2026** — Wszelkie prawa zastrzeżone.
+**REVVO © 2026 Szymon Kaczmarczyk** · licencja MIT
 
 </div>

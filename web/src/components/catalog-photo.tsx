@@ -1,19 +1,15 @@
 import Image from "next/image";
 import { CarFront } from "lucide-react";
 
-type Credit = { author: string; license: string; licenseUrl: string; sourceUrl: string } | null;
-
-/** Zdjęcie katalogowe (Wikimedia Commons) z obowiązkową atrybucją pod spodem. */
+/** Zdjęcie katalogowe generacji (albo placeholder, gdy go brak). */
 export function CatalogPhoto({
   src,
   alt,
-  credit,
   sizes,
   className = "",
 }: {
   src: string | null;
   alt: string;
-  credit?: Credit;
   sizes: string;
   className?: string;
 }) {
@@ -38,23 +34,6 @@ export function CatalogPhoto({
           </div>
         )}
       </div>
-      {credit && (
-        <figcaption className="truncate px-4 pt-2 text-[11px] leading-snug text-ink-muted">
-          Fot.{" "}
-          <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink hover:underline">
-            {credit.author}
-          </a>
-          ,{" "}
-          {credit.licenseUrl ? (
-            <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:text-ink hover:underline">
-              {credit.license}
-            </a>
-          ) : (
-            credit.license
-          )}
-          , Wikimedia Commons
-        </figcaption>
-      )}
     </figure>
   );
 }

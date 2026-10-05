@@ -10,7 +10,7 @@ const COLUMNS = [
     links: [
       { href: "/forum", label: "Forum" },
       { href: "/forum/setupy", label: "Setupy" },
-      { href: "/#garaz-miesiaca", label: "Garaż Miesiąca" },
+      { href: "/garaz-miesiaca", label: "Garaż Miesiąca" },
     ],
   },
   {

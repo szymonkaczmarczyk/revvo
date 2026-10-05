@@ -29,6 +29,34 @@
       "when": 1790515567803,
       "tag": "0003_atrybucja_zdjec",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791201470952,
+      "tag": "0004_konta_sesje_os_czasu",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791210162148,
+      "tag": "0005_zdjecia_aut",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791211030600,
+      "tag": "0006_os_czasu_historia",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791222498001,
+      "tag": "0007_plomienie",
+      "breakpoints": true
     }
   ]
 }

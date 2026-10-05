@@ -1,0 +1,43 @@
+{
+ "_opis": "Ręczne poprawki po przeglądzie: category — kategoria Commons dla generacji (gdy nazwy kategorii to kody nadwozia bez roczników), reject — generacja bez zdjęcia (powód), force — konkretny plik. exclude — pliki pominięte przy wyborze (tył auta, przeróbki, zła wersja).",
+ "category": {
+  "8084": "Honda Ascot (first generation)",
+  "8083": "Honda Ascot (second generation)",
+  "783": "Honda CR-X (EF6/7/8)",
+  "782": "Honda CR-X Del Sol",
+  "800": "Honda Accord Inspire",
+  "799": "Honda Inspire UA2",
+  "798": "Honda Inspire UA5",
+  "804": "Honda Integra AV/DA1/2",
+  "9363": "Honda Life SA",
+  "8105": "Honda Life JA4",
+  "833": "Honda Prelude SN",
+  "916": "Infiniti Q45 (FY33)",
+  "6987": "Infiniti Q60 (V36)",
+  "835": "Honda Saber (UA1/2/3)",
+  "834": "Honda Saber (UA4/5)",
+  "915": "Infiniti Q45 (F50)",
+  "9420": "Infiniti QX",
+  "9419": "Infiniti QX"
+ },
+ "reject": {
+  "922": "w Commons tylko zdjęcia QX80 po liftingu (2015+)"
+ },
+ "force": {},
+ "exclude": [
+  "File:Honda LIFE Dunk TS (JB3) front.JPG",
+  "File:Honda Passport 01 China 2017-03-20.jpg",
+  "File:Honda S2000 (Front Left).jpg",
+  "File:2006 Honda Stream 1.8 wagon (2016-01-04).jpg",
+  "File:QX4 Pre-2003.jpg",
+  "File:Infiniti QX 50 3.7 2015 (16042575252).jpg",
+  "File:Kdays 2017 (36222359776).jpg",
+  "File:Infiniti QX80 (Z62) front.jpg",
+  "File:2006–2008 Honda Life in Alabaster Silver Metallic (designated driver), front left.jpg",
+  "File:Honda Passport 02 China 2017-03-20.jpg",
+  "File:2006–2008 Honda Life in Alabaster Silver Metallic (designated driver), front right.jpg",
+  "File:Honda S2000 (Left Side).jpg",
+  "File:'97-'00 Infiniti QX4.JPG",
+  "File:'15 Infiniti QX80 (MIAS '15).jpg"
+ ]
+}

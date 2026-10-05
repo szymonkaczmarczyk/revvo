@@ -44,7 +44,6 @@ export default async function ModelPage({ params }: PageProps<"/katalog/[marka]/
                 <CatalogPhoto
                   src={g.imageUrl}
                   alt={`${m.makeName} ${m.name} ${g.name}`}
-                  credit={g.imageCredit}
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
                 <div className="flex flex-1 flex-col gap-3 p-4 pt-3">

@@ -1,5 +1,7 @@
 # Zdjęcia generacji z Wikimedia Commons
 
+> Zastąpione przez `../wikidata/` (dopasowanie przez Wikidatę i kategorie Commons) — ten katalog zostaje jako historia pierwszego importu.
+
 1. `python3 commons_find.py [id…]` — wyszukuje zdjęcie dla każdej generacji z `generacje.json` (eksport z bazy),
    filtry: wolna licencja, ≥ 1200 px, rocznik w opisie w zakresie produkcji, bez wnętrz/detali/aut wyścigowych/tuningu.
    Wynik: `commons_picks.json` (lub plik z `OUT=`).

@@ -2,7 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import { BadgeCheck, CarFront } from "lucide-react";
-import { STATUS_LABEL, type Vehicle, type VehicleStatus, vehicleName } from "@/lib/mock-data";
+import { STATUS_LABEL, type Vehicle, type VehicleStatus, vehicleName } from "@/lib/vehicles";
+
+type PhotoVehicle = Pick<Vehicle, "slug" | "owner" | "make" | "model" | "variant" | "photo">;
 
 const STATUS_CLASS: Record<VehicleStatus, string> = {
   daily: "text-status-daily bg-status-daily/12 border-status-daily/30",
@@ -42,7 +44,7 @@ export function VehiclePhoto({
   iconClassName = "size-10",
   caption,
 }: {
-  vehicle: Vehicle;
+  vehicle: PhotoVehicle;
   sizes: string;
   className?: string;
   priority?: boolean;
@@ -83,7 +85,7 @@ export function morphName(slug: string) {
  * Miniatura ma nazwę view transition — po kliknięciu „przelatuje” w hero garażu.
  * Na jednej stronie dane auto może mieć tylko jedną plakietkę z `morph` (nazwy muszą być unikalne).
  */
-export function VehicleBadge({ vehicle, morph = true }: { vehicle: Vehicle; morph?: boolean }) {
+export function VehicleBadge({ vehicle, morph = true }: { vehicle: PhotoVehicle; morph?: boolean }) {
   const thumb = (
     <VehiclePhoto
       vehicle={vehicle}
@@ -122,21 +124,3 @@ export function VehicleBadge({ vehicle, morph = true }: { vehicle: Vehicle; morp
   );
 }
 
-/** Obowiązkowy podpis zdjęcia z Wikimedia Commons (licencje CC BY / CC BY-SA). */
-export function PhotoCreditLine({ vehicle, className = "" }: { vehicle: Vehicle; className?: string }) {
-  const c = vehicle.photoCredit;
-  if (!c) return null;
-  return (
-    <p className={`truncate text-[11px] leading-snug text-ink-muted ${className}`}>
-      Fot.{" "}
-      <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink hover:underline">
-        {c.author}
-      </a>
-      ,{" "}
-      <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:text-ink hover:underline">
-        {c.license}
-      </a>
-      , Wikimedia Commons
-    </p>
-  );
-}

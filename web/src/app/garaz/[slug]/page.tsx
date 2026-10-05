@@ -1,47 +1,103 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { Suspense, ViewTransition } from "react";
-import { ArrowLeft, CalendarDays, Camera, Flag, Gauge, Share2, Wrench } from "lucide-react";
+import { ArrowLeft, CalendarDays, Camera, CircleCheck, Flag, Gauge, History, Pencil, Plus, Wrench } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FlameButton } from "@/components/flame-button";
-import { PhotoCreditLine, StatusBadge, VehiclePhoto, morphName } from "@/components/vehicle";
-import { getVehicle, vehicleName, vehicles, type TimelineEntry, type Vehicle } from "@/lib/mock-data";
+import { PhotoGallery } from "@/components/photo-gallery";
+import { FlameHydrator } from "@/components/flame-hydrator";
+import { StatusBadge, VehiclePhoto, morphName } from "@/components/vehicle";
+import { formatNumber, orMissing, withUnit } from "@/lib/format";
+import { type TimelineEntry, type Vehicle, vehicleName } from "@/lib/vehicles";
+import { getCurrentUser } from "@/server/auth/session";
+import { getTimeline, getVehicleBySlug, isVehicleOwner, listVehicleSlugs } from "@/server/garage/queries";
+import { getGalleryPhotos } from "@/server/photos";
 
-const fmt = new Intl.NumberFormat("pl-PL");
 const dateFmt = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric" });
 
-export function generateStaticParams() {
-  return vehicles.map((v) => ({ slug: v.slug }));
+export async function generateStaticParams() {
+  return listVehicleSlugs();
 }
 
 export async function generateMetadata({ params }: PageProps<"/garaz/[slug]">): Promise<Metadata> {
-  const { slug } = await params;
-  const v = getVehicle(slug);
-  return v ? { title: `${vehicleName(v)} — garaż: ${v.owner.name}` } : {};
+  const v = await getVehicleBySlug((await params).slug);
+  if (!v) return {};
+  return {
+    title: `${vehicleName(v)}: garaż ${v.owner.name}`,
+    description: `${vehicleName(v)}${v.year ? ` z ${v.year} r.` : ""}. Modyfikacje, serwis i historia auta w garażu ${v.owner.name} na Revvo.`,
+  };
 }
 
-export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">) {
+const NOTICES: Record<string, string> = {
+  dodano: "Auto jest w garażu. Teraz możesz pisać na forum, a przy Twoich wpisach pojawi się jego plakietka.",
+  zapisano: "Zmiany zapisane.",
+};
+
+async function SavedNotice({
+  searchParams,
+  photosHref,
+}: {
+  searchParams: PageProps<"/garaz/[slug]">["searchParams"];
+  photosHref: string;
+}) {
+  const params = await searchParams;
+  const key = Object.keys(NOTICES).find((k) => params[k] === "1");
+  if (!key) return null;
+  return (
+    <p role="status" className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-success/40 bg-success/10 p-3 text-sm text-ink">
+      <CircleCheck className="size-4 shrink-0 text-success" aria-hidden="true" />
+      {NOTICES[key]}
+      {key === "dodano" && (
+        <Link href={photosHref} className="font-semibold text-cobalt-text hover:text-cobalt-text-hover hover:underline">
+          Dodaj zdjęcia
+        </Link>
+      )}
+    </p>
+  );
+}
+
+async function OwnerTools({ slug }: { slug: string }) {
+  const user = await getCurrentUser();
+  const vehicleId = user ? await isVehicleOwner(user.id, slug) : null;
+  if (!vehicleId) return null;
+  return (
+    <Link
+      href={`/moj-garaz/${vehicleId}/edytuj`}
+      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-surface-2"
+    >
+      <Pencil className="size-4" aria-hidden="true" /> Edytuj auto
+    </Link>
+  );
+}
+
+export default async function GaragePage({ params, searchParams }: PageProps<"/garaz/[slug]">) {
   const { slug } = await params;
-  const vehicle = getVehicle(slug);
+  const vehicle = await getVehicleBySlug(slug);
   if (!vehicle) notFound();
+  const photos = await getGalleryPhotos(vehicle.id!);
 
   return (
     <>
       <SiteHeader />
+      <Suspense>
+        <FlameHydrator keys={[`vehicle:${vehicle.id}`]} />
+      </Suspense>
       <main className="flex-1 pt-[var(--header-h)]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <Link
-            href="/#forum"
+            href="/forum"
             transitionTypes={["nav-back"]}
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cobalt-text transition-colors hover:text-cobalt-text-hover"
           >
             <ArrowLeft className="size-4" aria-hidden="true" /> Wróć do forum
           </Link>
 
-          {/* Hero garażu — cel przejścia „morph” z miniatury auta */}
+          <Suspense>
+            <SavedNotice searchParams={searchParams} photosHref={`/moj-garaz/${vehicle.id}/edytuj#zdjecia`} />
+          </Suspense>
+
           <ViewTransition name={morphName(vehicle.slug)} share="morph" default="none">
             <VehiclePhoto
               vehicle={vehicle}
@@ -52,7 +108,9 @@ export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">)
               className="mt-4 aspect-[16/9] w-full rounded-xl border border-line sm:aspect-[21/9]"
             />
           </ViewTransition>
-          <PhotoCreditLine vehicle={vehicle} className="mt-2" />
+          {vehicle.photoIsCatalog && (
+            <p className="mt-2 text-xs text-ink-muted">Zdjęcie poglądowe z katalogu, nie przedstawia tego egzemplarza.</p>
+          )}
 
           <header className="mt-6 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
@@ -64,7 +122,7 @@ export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">)
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <StatusBadge status={vehicle.status} />
-                <span className="font-mono text-sm text-ink-muted">{vehicle.year}</span>
+                {vehicle.year && <span className="font-mono text-sm text-ink-muted">{vehicle.year}</span>}
                 {vehicle.catalogPath && (
                   <Link
                     href={vehicle.catalogPath}
@@ -75,24 +133,20 @@ export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">)
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <FlameButton count={vehicle.flames} label="Odpal auto" />
-              <button
-                type="button"
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-surface-2"
-              >
-                <Share2 className="size-4" aria-hidden="true" />
-                Historia serwisowa
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Suspense>
+                <OwnerTools slug={vehicle.slug} />
+              </Suspense>
+              <FlameButton count={vehicle.flames} label="Odpal auto" target={{ type: "vehicle", id: vehicle.id! }} />
             </div>
           </header>
 
           <dl className="mt-6 grid grid-cols-2 gap-4 rounded-lg border border-line bg-surface p-5 sm:grid-cols-4">
             {[
-              ["Silnik", vehicle.engine],
-              ["Moc", `${vehicle.powerHp} KM`],
-              ["Lakier", vehicle.paintCode],
-              ["Przebieg", `${fmt.format(vehicle.mileageKm)} km`],
+              ["Silnik", orMissing(vehicle.engine)],
+              ["Moc", withUnit(vehicle.powerHp, "KM")],
+              ["Lakier", orMissing(vehicle.paintCode)],
+              ["Przebieg", withUnit(vehicle.mileageKm, "km")],
             ].map(([label, value]) => (
               <div key={label} className="min-w-0">
                 <dt className="text-[11px] uppercase tracking-wider text-ink-muted">{label}</dt>
@@ -101,7 +155,17 @@ export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">)
             ))}
           </dl>
 
-          {/* Build-log streamuje się dynamicznie: miedziany skeleton, potem treść wjeżdża od dołu (rv-reveal) */}
+          {photos.length > 1 && (
+            <section aria-labelledby="gallery-title" className="mt-8">
+              <h2 id="gallery-title" className="font-display text-lg font-bold uppercase tracking-tight text-ink">
+                Zdjęcia <span className="font-mono text-sm font-normal normal-case text-ink-muted">{photos.length}</span>
+              </h2>
+              <div className="mt-4">
+                <PhotoGallery photos={photos} title={vehicleName(vehicle)} />
+              </div>
+            </section>
+          )}
+
           <Suspense fallback={<GarageDetailsSkeleton />}>
             <GarageDetails vehicle={vehicle} />
           </Suspense>
@@ -113,16 +177,19 @@ export default async function GaragePage({ params }: PageProps<"/garaz/[slug]">)
 }
 
 async function GarageDetails({ vehicle }: { vehicle: Vehicle }) {
-  await connection();
-  // Makieta: symulacja zapytania do bazy, żeby było widać animację ładowania
-  await new Promise((r) => setTimeout(r, 900));
+  const [timeline, viewer] = await Promise.all([getTimeline(vehicle.id!), getCurrentUser()]);
+  const ownerVehicleId = viewer ? await isVehicleOwner(viewer.id, vehicle.slug) : null;
 
   return (
     <div className="rv-reveal mt-8 grid gap-8 lg:grid-cols-[320px_1fr]">
+      <FlameHydrator keys={timeline.flatMap((e) => (e.id ? [`entry:${e.id}`] : []))} />
       <section aria-labelledby="mods-title" className="h-fit rounded-lg border border-line bg-surface p-5">
         <h2 id="mods-title" className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-ink-muted">
           <Wrench className="size-4 text-copper" aria-hidden="true" /> Modyfikacje
         </h2>
+        {vehicle.mods.length === 0 && (
+          <p className="mt-4 text-sm text-ink-muted">Auto w fabrycznej specyfikacji albo lista modyfikacji jest jeszcze pusta.</p>
+        )}
         <ul className="mt-4 flex flex-col gap-3">
           {vehicle.mods.map((m) => (
             <li key={m.part} className="rounded-md border border-line bg-bg/50 p-3">
@@ -134,14 +201,38 @@ async function GarageDetails({ vehicle }: { vehicle: Vehicle }) {
       </section>
 
       <section aria-labelledby="timeline-title">
-        <h2 id="timeline-title" className="font-display text-lg font-bold uppercase tracking-tight text-ink">
-          Oś czasu
-        </h2>
-        <ol className="relative mt-5 flex flex-col gap-4 border-l border-line pl-6">
-          {vehicle.timeline.map((e) => (
-            <TimelineItem key={e.date + e.title} entry={e} />
-          ))}
-        </ol>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="timeline-title" className="font-display text-lg font-bold uppercase tracking-tight text-ink">
+            Oś czasu
+          </h2>
+          {ownerVehicleId && (
+            <Link
+              href={`/moj-garaz/${ownerVehicleId}/wpisy/nowy`}
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-copper px-4 text-sm font-bold text-on-copper transition-colors duration-200 hover:bg-copper-hover"
+            >
+              <Plus className="size-4" aria-hidden="true" /> Dodaj wpis
+            </Link>
+          )}
+        </div>
+        {timeline.length === 0 ? (
+          <div className="mt-5 flex items-start gap-3 rounded-lg border border-dashed border-line-strong p-5 text-sm text-ink-muted">
+            <History className="size-5 shrink-0 text-copper" aria-hidden="true" />
+            {ownerVehicleId
+              ? "Dodaj pierwszy wpis: ostatni serwis, wymianę części albo dzień na torze. Z tych wpisów powstaje historia serwisowa dla kupującego."
+              : "Na osi czasu pojawią się serwisy, modyfikacje i dni na torze."}
+          </div>
+        ) : (
+          <ol className="relative mt-5 flex flex-col gap-4 border-l border-line pl-6">
+            {timeline.map((e) => (
+              <TimelineItem
+                key={e.id ?? e.date + e.title}
+                entry={e}
+                title={vehicleName(vehicle)}
+                editHref={ownerVehicleId && e.id ? `/moj-garaz/${ownerVehicleId}/wpisy/${e.id}` : null}
+              />
+            ))}
+          </ol>
+        )}
       </section>
     </div>
   );
@@ -154,10 +245,10 @@ const KIND = {
   photo: { icon: Camera, label: "Zdjęcia" },
 } as const;
 
-function TimelineItem({ entry }: { entry: TimelineEntry }) {
+function TimelineItem({ entry, title, editHref }: { entry: TimelineEntry; title: string; editHref: string | null }) {
   const { icon: Icon, label } = KIND[entry.kind];
   return (
-    <li className="relative rounded-lg border border-line bg-surface p-5">
+    <li id={entry.id ? `wpis-${entry.id}` : undefined} className="relative scroll-mt-28 rounded-lg border border-line bg-surface p-5">
       <span
         className="absolute -left-[37px] top-5 flex size-6 items-center justify-center rounded-full border border-line-strong bg-surface-2 text-copper"
         aria-hidden="true"
@@ -170,12 +261,25 @@ function TimelineItem({ entry }: { entry: TimelineEntry }) {
           <CalendarDays className="size-3.5" aria-hidden="true" />
           {dateFmt.format(new Date(entry.date))}
         </span>
-        {entry.mileageKm && <span className="font-mono">{fmt.format(entry.mileageKm)} km</span>}
+        {entry.mileageKm != null && <span className="font-mono">{formatNumber(entry.mileageKm)} km</span>}
       </div>
       <h3 className="mt-2 font-bold text-ink">{entry.title}</h3>
-      <p className="mt-1 text-[15px] leading-relaxed text-ink-muted">{entry.note}</p>
-      <div className="mt-3">
-        <FlameButton count={entry.flames} size="sm" label="Odpal wpis" />
+      {entry.note && <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-ink-muted">{entry.note}</p>}
+      {entry.photos && entry.photos.length > 0 && (
+        <div className="mt-3">
+          <PhotoGallery photos={entry.photos} title={`${title}: ${entry.title}`} variant="strip" />
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {entry.id && <FlameButton count={entry.flames} size="sm" label="Odpal wpis" target={{ type: "entry", id: entry.id }} />}
+        {editHref && (
+          <Link
+            href={editHref}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            <Pencil className="size-4" aria-hidden="true" /> Edytuj
+          </Link>
+        )}
       </div>
     </li>
   );

@@ -68,7 +68,6 @@ export async function getModelWithGenerations(makeSlug: string, modelSlug: strin
       yearFrom: carGenerations.yearFrom,
       yearTo: carGenerations.yearTo,
       imageUrl: carGenerations.imageUrl,
-      imageCredit: carGenerations.imageCredit,
       bodyTypes: sql<string[]>`coalesce(array_agg(distinct ${carSeries.bodyType}) filter (where ${carSeries.bodyType} is not null), '{}')`,
       trims: sql<number>`count(distinct ${carTrims.id})::int`,
       powerMin: sql<number | null>`min(${carTrims.powerHp})`,

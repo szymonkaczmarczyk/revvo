@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   foreignKey,
   index,
   integer,
@@ -96,7 +97,7 @@ export const carGenerations = pgTable(
     facelift: smallint().default(0).notNull(),
     /** Zdjęcie katalogowe (1280 px, WebP) w R2; wariant 640 px: ten sam adres z /640.webp */
     imageUrl: text("image_url"),
-    /** Atrybucja zdjęcia z Wikimedia Commons (wymagana przez licencje CC BY / CC BY-SA) */
+    /** Atrybucja zdjęcia z Wikimedia Commons (autor, licencja, źródło) — nie jest wyświetlana przy zdjęciu; źródła opisywane osobno */
     imageCredit: jsonb("image_credit").$type<{
       author: string;
       license: string;
@@ -210,6 +211,7 @@ export const vehicles = pgTable(
     /** [{ category, part }] — do czasu wydzielenia tabeli vehicle_mods */
     mods: jsonb().$type<{ category: string; part: string }[]>().default([]).notNull(),
     coverImageUrl: text("cover_image_url"),
+    historyToken: varchar("history_token", { length: 64 }).unique(),
     isPrimary: boolean("is_primary").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -261,5 +263,101 @@ export const comments = pgTable(
   (t) => [
     foreignKey({ columns: [t.parentId], foreignColumns: [t.id], name: "comments_parent_fk" }).onDelete("cascade"),
     index("comments_post_idx").on(t.postId, t.createdAt),
+  ],
+);
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: varchar({ length: 64 }).primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("sessions_user_idx").on(t.userId)],
+);
+
+export const emailVerificationTokens = pgTable(
+  "email_verification_tokens",
+  {
+    tokenHash: varchar("token_hash", { length: 64 }).primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("email_verification_user_idx").on(t.userId)],
+);
+
+export const rateLimitHits = pgTable(
+  "rate_limit_hits",
+  {
+    id: serial().primaryKey(),
+    key: varchar({ length: 200 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("rate_limit_key_created_idx").on(t.key, t.createdAt)],
+);
+
+export const timelineKind = pgEnum("timeline_kind", ["mod", "service", "track", "photo"]);
+
+export const vehicleTimelineEntries = pgTable(
+  "vehicle_timeline_entries",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => vehicles.id, { onDelete: "cascade" }),
+    kind: timelineKind().notNull(),
+    title: varchar({ length: 160 }).notNull(),
+    note: text().default("").notNull(),
+    happenedOn: date("happened_on", { mode: "string" }).notNull(),
+    mileageKm: integer("mileage_km"),
+    costPln: integer("cost_pln"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("timeline_vehicle_date_idx").on(t.vehicleId, t.happenedOn.desc())],
+);
+
+export const vehiclePhotos = pgTable(
+  "vehicle_photos",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    vehicleId: uuid("vehicle_id")
+      .notNull()
+      .references(() => vehicles.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    timelineEntryId: uuid("timeline_entry_id").references(() => vehicleTimelineEntries.id, { onDelete: "set null" }),
+    storageKey: varchar("storage_key", { length: 200 }).notNull().unique(),
+    width: integer().notNull(),
+    height: integer().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("vehicle_photos_vehicle_idx").on(t.vehicleId, t.createdAt)],
+);
+
+export const flameTarget = pgEnum("flame_target", ["vehicle", "post", "comment", "entry"]);
+
+export const flames = pgTable(
+  "flames",
+  {
+    id: serial().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    targetType: flameTarget("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique("flames_user_target").on(t.userId, t.targetType, t.targetId),
+    index("flames_target_idx").on(t.targetType, t.targetId),
+    index("flames_created_idx").on(t.createdAt),
   ],
 );
