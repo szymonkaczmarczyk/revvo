@@ -144,10 +144,6 @@ Revvo/
 ├── docs/                     # Dokumentacja projektu oraz zrzuty ekranu
 │   └── screenshots/          # Wygenerowane zrzuty ekranu interfejsu (Retina)
 ├── logo/                     # Oficjalne assety identyfikacji wizualnej (wektory SVG, PNG, WebP)
-├── background/               # Materiały tła (wideo MP4 1080p/720p, plakaty WebP)
-├── design-system/            # Specyfikacja design systemu, tokeny kolorystyczne i wytyczne UI
-├── baza-danych/              # Źródłowy katalog techniczny pojazdów car2db (CSV + SQL)
-├── content/                  # Materiały seedujące (zdjęcia pojazdów, rendery)
 ├── package.json              # Główne skróty npm do uruchamiania poleceń w projekcie
 └── web/                      # Główna aplikacja Next.js
     ├── .env.example          # Wzorzec bezpiecznych zmiennych środowiskowych
@@ -197,6 +193,8 @@ Zastosuj przygotowane migracje tabel w PostgreSQL i zasiej bazę podstawowym kat
 npm run db:migrate
 npm run db:seed
 ```
+
+Źródłowy katalog aut (`baza-danych/`), oryginały wideo (`background/`), zdjęcia źródłowe (`content/`) i design system (`design-system/`) są tylko lokalne i nie trafiają do repozytorium. `npm run db:seed` wymaga katalogu `baza-danych/` obok folderu `web/`.
 
 > **Wskazówka:** Możesz uruchomić Drizzle Studio w przeglądarce, aby podejrzeć strukturę i zawartość bazy danych:
 > ```bash
@@ -274,7 +272,9 @@ Bez działającego serwera Playwright sam uruchomi `next dev` na porcie 3100 z t
 
 ## 📄 Licencja
 
-Projekt jest udostępniony na licencji MIT. Pełna treść w pliku [LICENSE](LICENSE).
+Kod projektu jest udostępniony na licencji MIT. Pełna treść w pliku [LICENSE](LICENSE).
+
+Licencja MIT nie obejmuje nazwy i logo Revvo (`logo/`, `web/public/brand/`), wideo z tła strony ani zdjęć aut z Wikimedia Commons, które mają własne licencje (CC BY, CC BY-SA, CC0) zapisane w bazie przy każdym zdjęciu.
 
 ---
 

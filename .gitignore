@@ -110,6 +110,32 @@ AGENTS.md
 *.db
 *.local.sql
 
-# --- Lokalne materiały źródłowe (nie publikujemy) ---
-content/seed/
-design-system/revvo/MASTER.md
+# --- Dane licencjonowane i materiały źródłowe (tylko lokalnie) ---------------
+# Zrzut car2db: regulamin zabrania publikowania bazy
+/baza-danych/
+# Oryginały wideo (strona serwuje kopie z web/public/video)
+/background/
+# Zdjęcia źródłowe z Wikimedia Commons, atrybucje, prompty
+/content/
+# Design system generowany lokalnie
+/design-system/
+# Wyniki pośrednie skryptów importu (zawierają dane z katalogu car2db)
+web/scripts/commons/generacje.json
+web/scripts/wikidata/wikidata_picks.json
+web/scripts/wikidata/raport.tsv
+# Zrzuty baz, eksporty i surowe pliki graficzne
+*.dump
+*.sql.gz
+*.csv
+*.tsv
+*.psd
+*.ai
+*.heic
+*.mov
+*.raw
+
+# --- Duplikaty tworzone przez iCloud (Pulpit synchronizowany) ----------------
+* 2
+* 2.*
+* 3
+* 3.*
